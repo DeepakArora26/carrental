@@ -11,7 +11,6 @@ import com.navi.project.carrental.repository.VehicleSlotBookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -29,7 +28,15 @@ public class VehicleService {
 
 
     public List<Vehicle> getWithAdvanceSearch(String branchId, String startTime, String endTime) {
-        return vehicleRepository.findByBranch_IdAndVehicleBookingSlotList_StartTimeAndVehicleBookingSlotList_EndTime(branchId, LocalTime.parse(startTime), LocalTime.parse(endTime));
+        List<Vehicle> vehicleList = getVehiclesInBranch(branchId);
+        if(!vehicleList.isEmpty()) {
+            return filterVehiclesWithFreeSlot(vehicleList, LocalTime.parse(startTime), LocalTime.parse(endTime));
+        }
+        return new ArrayList<>();
+    }
+
+    private List<Vehicle> getVehiclesInBranch(String branchId) {
+        return vehicleRepository.findByBranch_Id(branchId);
     }
 
     public void addVehicleToBranch(AddVehicleRequest addVehicleRequest) {
@@ -52,14 +59,12 @@ public class VehicleService {
     public void bookVehicle(VehicleBookingRequest vehicleBookingRequest) {
       List<Vehicle> vehicleList = getVehiclesInBranchUsingType(vehicleBookingRequest);
       if(!vehicleList.isEmpty()) {
-          vehicleList = filterVehiclesWithFreeSlot(vehicleList, vehicleBookingRequest);
+          LocalTime startTime = LocalTime.parse(vehicleBookingRequest.getStartTime());
+          LocalTime endTime = LocalTime.parse(vehicleBookingRequest.getEndTime());
+          vehicleList = filterVehiclesWithFreeSlot(vehicleList, startTime, endTime);
           if(!vehicleList.isEmpty()) {
               System.out.println("Success Booking");
               VehicleBookingSlot vehicleBookingSlot = new VehicleBookingSlot();
-
-              LocalTime startTime = LocalTime.parse(vehicleBookingRequest.getStartTime());
-              LocalTime endTime = LocalTime.parse(vehicleBookingRequest.getEndTime());
-
               vehicleBookingSlot.setStartTime(startTime);
               vehicleBookingSlot.setEndTime(endTime);
               vehicleBookingSlot.setVehicle(vehicleList.get(0));
@@ -74,10 +79,7 @@ public class VehicleService {
 
     }
 //10-12,10-11,Free need to book for 10-11
-    private List<Vehicle> filterVehiclesWithFreeSlot(List<Vehicle> vehicleList, VehicleBookingRequest vehicleBookingRequest) {
-
-        LocalTime startTime = LocalTime.parse(vehicleBookingRequest.getStartTime());
-        LocalTime endTime = LocalTime.parse(vehicleBookingRequest.getEndTime());
+    private List<Vehicle> filterVehiclesWithFreeSlot(List<Vehicle> vehicleList, LocalTime startTime, LocalTime endTime) {
 
         List<Vehicle> vehicleWithFreeSlot = new ArrayList<>();
 
