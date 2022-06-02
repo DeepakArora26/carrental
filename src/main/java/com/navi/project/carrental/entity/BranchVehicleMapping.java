@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Setter
 public class BranchVehicleMapping {
     @Id
-    private int id;
+    private String id;
     @ManyToOne
     @JoinColumn(name = "branch_id")
     @JsonIgnore
