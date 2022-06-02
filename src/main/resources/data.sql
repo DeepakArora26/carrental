@@ -19,7 +19,9 @@ INTO
   vehicle
   (id, branch_id, type, price)
 VALUES
-  ('V1', 'B1', 'VAN', 500);
+  ('V1', 'B1', 'VAN', 500),
+  ('V2', 'B1', 'VAN', 400),
+  ('V3', 'B1', 'VAN', 600);
 
 
   INSERT
@@ -27,4 +29,5 @@ INTO
   vehicle_booking_slot
   (id, vehicle_id, start_Time, end_Time)
 VALUES
-  (1000000, 'V1', PARSEDATETIME('10:00', 'HH:mm'), PARSEDATETIME('17:00', 'HH:mm'));
+  (1000000, 'V2', PARSEDATETIME('10:00', 'HH:mm'), PARSEDATETIME('12:00', 'HH:mm')),
+    (1000001, 'V2', PARSEDATETIME('14:00', 'HH:mm'), PARSEDATETIME('17:00', 'HH:mm'));
