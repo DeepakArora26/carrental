@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VehicleService {
@@ -46,51 +49,68 @@ public class VehicleService {
         if(branch.isEmpty()) {
 
         } else {
-            Vehicle vehicle = new Vehicle();
-            vehicle.setBranch(branch.get());
-            vehicle.setId(addVehicleRequest.getVehicleId());
-            vehicle.setPrice(addVehicleRequest.getPrice());
-            vehicle.setType(addVehicleRequest.getType());
-            vehicleRepository.save(vehicle);
+            if (branch.get().getVehicleTypes().contains(addVehicleRequest.getType())) {
+                Vehicle vehicle = new Vehicle();
+                vehicle.setBranch(branch.get());
+                vehicle.setId(addVehicleRequest.getVehicleId());
+                vehicle.setPrice(addVehicleRequest.getPrice());
+                vehicle.setType(addVehicleRequest.getType());
+                vehicleRepository.save(vehicle);
+            } else {
+                System.out.println("This Type Of Vehicle is Not Available in Branch");
+            }
+
         }
 
     }
 
     public void bookVehicle(VehicleBookingRequest vehicleBookingRequest) {
-      List<Vehicle> vehicleList = getVehiclesInBranchUsingType(vehicleBookingRequest);
-      if(!vehicleList.isEmpty()) {
-          LocalTime startTime = LocalTime.parse(vehicleBookingRequest.getStartTime());
-          LocalTime endTime = LocalTime.parse(vehicleBookingRequest.getEndTime());
-          vehicleList = filterVehiclesWithFreeSlot(vehicleList, startTime, endTime);
-          if(!vehicleList.isEmpty()) {
-              System.out.println("Success Booking");
-              VehicleBookingSlot vehicleBookingSlot = new VehicleBookingSlot();
-              vehicleBookingSlot.setStartTime(startTime);
-              vehicleBookingSlot.setEndTime(endTime);
-              vehicleBookingSlot.setVehicle(vehicleList.get(0));
-              vehicleSlotBookingRepository.save(vehicleBookingSlot);
+        //verify if time slow
+        List<Vehicle> vehicleList = getVehiclesInBranchUsingType(vehicleBookingRequest);
+        int totalVehicleCount = vehicleList.size();
+        int availableVehicleCount;
+        if (!vehicleList.isEmpty()) {
+            LocalTime startTime = LocalTime.parse(vehicleBookingRequest.getStartTime());
+            LocalTime endTime = LocalTime.parse(vehicleBookingRequest.getEndTime());
+            vehicleList = filterVehiclesWithFreeSlot(vehicleList, startTime, endTime);
+            availableVehicleCount = vehicleList.size();
+            if (!vehicleList.isEmpty()) {
+                System.out.println("Success Booking");
+                VehicleBookingSlot vehicleBookingSlot = new VehicleBookingSlot();
+                vehicleBookingSlot.setStartTime(startTime);
+                vehicleBookingSlot.setEndTime(endTime);
+                vehicleBookingSlot.setVehicle(vehicleList.get(0));
+                vehicleBookingSlot.setPrice(dynamicPricing(totalVehicleCount, availableVehicleCount, vehicleList.get(0).getPrice()));
+                vehicleSlotBookingRepository.save(vehicleBookingSlot);
 
-          } else {
-             System.out.println("Vehicle Already Booked");
-          }
-      } else {
-          System.out.println("No Vehicles Available in Branch For Given Type");
-      }
+            } else {
+                System.out.println("Vehicle Already Booked");
+            }
+        } else {
+            System.out.println("No Vehicles Available in Branch For Given Type");
+        }
 
     }
-//10-12,10-11,Free need to book for 10-11
+
+    private double dynamicPricing(int totalVehicleCount, int availableVehicleCount, double price) {
+        if (availableVehicleCount / totalVehicleCount < 0.2) {
+            return price + price * 0.1;
+        } else return price;
+    }
+
+    //10-12,10-11,Free need to book for 10-11
     private List<Vehicle> filterVehiclesWithFreeSlot(List<Vehicle> vehicleList, LocalTime startTime, LocalTime endTime) {
 
         List<Vehicle> vehicleWithFreeSlot = new ArrayList<>();
 
-        for(Vehicle vehicle : vehicleList) {
+        for (Vehicle vehicle : vehicleList) {
             List<VehicleBookingSlot> vehicleBookingSlotList = vehicle.getVehicleBookingSlotList();
             boolean isSlotFree = true;
-            for(VehicleBookingSlot vehicleBookingSlot: vehicleBookingSlotList) {
+            for (VehicleBookingSlot vehicleBookingSlot : vehicleBookingSlotList) {
                 if ((vehicleBookingSlot.getStartTime().isAfter(startTime) && vehicleBookingSlot.getEndTime().isBefore(endTime)) ||
                         vehicleBookingSlot.getEndTime().isAfter(startTime) && vehicleBookingSlot.getStartTime().isBefore(endTime)
                 ) {
-                   isSlotFree = false;
+                    isSlotFree = false;
                 }
             }
             if (isSlotFree) {

@@ -4,13 +4,19 @@ import com.navi.project.carrental.entity.Branch;
 import com.navi.project.carrental.entity.BranchVehicleMapping;
 import com.navi.project.carrental.model.AddBranchRequest;
 import com.navi.project.carrental.repository.BranchRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BranchService {
+
+    private static Logger logger = LoggerFactory.getLogger(BranchService.class);
 
     @Autowired
     BranchRepository branchRepository;
@@ -21,24 +27,33 @@ public class BranchService {
 
     public Optional<Branch> addNewBranch(AddBranchRequest addBranchRequest) {
 
-        Branch branch = new Branch();
-        branch.setId(addBranchRequest.getId());
+        Optional<Branch> existingBranch = branchRepository.findById(addBranchRequest.getId());
+        if (existingBranch.isEmpty()) {
 
-        List<BranchVehicleMapping> branchVehicleMappings = new ArrayList<>();
-        for(String vehicleType: addBranchRequest.getVehicleTypes()) {
-            BranchVehicleMapping branchVehicleMapping = new BranchVehicleMapping();
-            branchVehicleMapping.setVehicleType(vehicleType);
-            branchVehicleMapping.setBranch(branch);
-            branchVehicleMapping.setId(branch.getId().concat("_").concat(vehicleType));
-            branchVehicleMappings.add(branchVehicleMapping);
+            Branch branch = new Branch();
+            branch.setId(addBranchRequest.getId());
+
+            List<BranchVehicleMapping> branchVehicleMappings = new ArrayList<>();
+            for (String vehicleType : addBranchRequest.getVehicleTypes()) {
+                branchVehicleMappings.add(getBranchVehicleMapping(branch, vehicleType));
+            }
+            branch.setVehicleTypes(branchVehicleMappings);
+            return Optional.ofNullable(branchRepository.save(branch));
+        } else {
+            logger.info("FALSE");
+            return existingBranch;
         }
-
-        branch.setVehicleTypes(branchVehicleMappings);
-
-        return Optional.ofNullable(branchRepository.save(branch));
     }
 
-    public Optional<Branch> findBranchById(String branchId){
+    private BranchVehicleMapping getBranchVehicleMapping(Branch branch, String vehicleType) {
+        BranchVehicleMapping branchVehicleMapping = new BranchVehicleMapping();
+        branchVehicleMapping.setVehicleType(vehicleType);
+        branchVehicleMapping.setBranch(branch);
+        branchVehicleMapping.setId(branch.getId().concat("_").concat(vehicleType));
+        return branchVehicleMapping;
+    }
+
+    public Optional<Branch> findBranchById(String branchId) {
         return branchRepository.findById(branchId);
     }
 }
