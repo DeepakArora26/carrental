@@ -20,9 +20,9 @@ public class BranchController {
     BranchService branchService;
 
     @PostMapping
-    public ResponseEntity addBranch(@RequestBody AddBranchRequest addBranchRequest) {
+    public ResponseEntity<String> addBranch(@RequestBody AddBranchRequest addBranchRequest) {
         Optional<Branch> branch = branchService.addNewBranch(addBranchRequest);
-        if(branch.isEmpty()) {
+        if (branch.isEmpty()) {
             return new ResponseEntity<>("Not Created", HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>("Created", HttpStatus.CREATED);
