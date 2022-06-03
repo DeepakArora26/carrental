@@ -7,8 +7,5 @@ import java.util.List;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, String> {
     List<Vehicle> findByBranch_IdAndType(String id, String type);
-
     List<Vehicle> findByBranch_Id(String id);
-
-
 }

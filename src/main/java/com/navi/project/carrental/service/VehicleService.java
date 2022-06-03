@@ -8,6 +8,8 @@ import com.navi.project.carrental.model.VehicleBookingRequest;
 import com.navi.project.carrental.model.VehicleReturnRequest;
 import com.navi.project.carrental.repository.VehicleRepository;
 import com.navi.project.carrental.repository.VehicleSlotBookingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,8 @@ import java.util.Optional;
 
 @Service
 public class VehicleService {
+
+    private static Logger logger = LoggerFactory.getLogger(VehicleService.class);
 
     @Autowired
     VehicleRepository vehicleRepository;
@@ -47,7 +51,7 @@ public class VehicleService {
         Optional<Branch> branch = branchService.findBranchById(addVehicleRequest.getBranchId());
 
         if(branch.isEmpty()) {
-
+            logger.info("No Branch is Present");
         } else {
             if (branch.get().getVehicleTypes().contains(addVehicleRequest.getType())) {
                 Vehicle vehicle = new Vehicle();
@@ -57,11 +61,9 @@ public class VehicleService {
                 vehicle.setType(addVehicleRequest.getType());
                 vehicleRepository.save(vehicle);
             } else {
-                System.out.println("This Type Of Vehicle is Not Available in Branch");
+                logger.info("This Type Of Vehicle is Not Available in Branch");
             }
-
         }
-
     }
 
     public void bookVehicle(VehicleBookingRequest vehicleBookingRequest) {
@@ -75,7 +77,6 @@ public class VehicleService {
             vehicleList = filterVehiclesWithFreeSlot(vehicleList, startTime, endTime);
             availableVehicleCount = vehicleList.size();
             if (!vehicleList.isEmpty()) {
-                System.out.println("Success Booking");
                 VehicleBookingSlot vehicleBookingSlot = new VehicleBookingSlot();
                 vehicleBookingSlot.setStartTime(startTime);
                 vehicleBookingSlot.setEndTime(endTime);
@@ -84,12 +85,11 @@ public class VehicleService {
                 vehicleSlotBookingRepository.save(vehicleBookingSlot);
 
             } else {
-                System.out.println("Vehicle Already Booked");
+                logger.info("Vehicle Already Booked");
             }
         } else {
-            System.out.println("No Vehicles Available in Branch For Given Type");
+            logger.info("No Vehicles Available in Branch For Given Type");
         }
-
     }
 
     private double dynamicPricing(int totalVehicleCount, int availableVehicleCount, double price) {

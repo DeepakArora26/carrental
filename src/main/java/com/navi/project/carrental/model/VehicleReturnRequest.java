@@ -6,8 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VehicleReturnRequest {
-
     private String branchId;
     private String bookingId;
-
 }

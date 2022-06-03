@@ -1,12 +1,14 @@
 package com.navi.project.carrental.entity;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
